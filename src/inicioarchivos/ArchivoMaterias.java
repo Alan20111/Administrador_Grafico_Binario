@@ -32,7 +32,7 @@ public class ArchivoMaterias extends Archivos {
         } catch (IOException e) {
                        JOptionPane.showMessageDialog(null, "Ha ocurrido un error", "Error", JOptionPane.ERROR_MESSAGE);
 
-            return false;
+            return true;
         }
     }
 
