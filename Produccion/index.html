@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sistema de Inscripciones — Demo (Alan Méndez)</title>
+<style>
+  body{margin:0;background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 10px}
+  .lead{text-align:center;margin-bottom:12px}
+  .lead h1{font-size:1.2rem;margin:0}.lead p{color:#9aa7b8;font-size:.85rem;margin:3px 0 0}
+  .lead a{color:#5aa2ff;text-decoration:none}
+
+  /* Ventana Swing (Look&Feel Nimbus) */
+  .win{width:min(98vw,940px);border:1px solid #2b2b2b;border-radius:6px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);background:#eceef2;color:#1d1d1d}
+  .titlebar{height:30px;background:linear-gradient(#dfe3ea,#c9cfda);border-bottom:1px solid #aeb4c0;
+    display:flex;align-items:center;padding:0 8px;font-size:12.5px;color:#33384a;gap:8px}
+  .titlebar .ico{width:13px;height:13px;border-radius:3px;background:#51688e;display:inline-block}
+  .titlebar .wb{margin-left:auto;display:flex}
+  .titlebar .wb span{width:30px;height:22px;display:flex;align-items:center;justify-content:center;color:#4a4f60;font-size:12px}
+  .titlebar .wb span:hover{background:#bcc3d1}.titlebar .wb .cls:hover{background:#e81123;color:#fff}
+
+  /* Barra de navegación (botones Nimbus) */
+  .nav{display:flex;gap:8px;padding:9px 12px;background:linear-gradient(#e7eaf0,#dadfe8);border-bottom:1px solid #b6bcc8}
+  .nbtn{font-family:inherit;font-size:13px;padding:6px 16px;border:1px solid #97a0b0;border-radius:9px;
+    background:linear-gradient(#fdfdfe,#dfe3ea);color:#23262e;cursor:pointer;box-shadow:inset 0 1px 0 #fff}
+  .nbtn:hover{background:linear-gradient(#ffffff,#e7ebf1)}
+  .nbtn:active{background:linear-gradient(#dde1e9,#ccd2dc)}
+  .nbtn.active{border-color:#5b9bd5;background:linear-gradient(#eaf3fc,#d4e7f8);
+    box-shadow:0 0 0 2px rgba(91,155,213,.45),inset 0 1px 0 #fff}
+
+  .panel{background:#fff;margin:12px;border:1px solid #c3c8d2;border-radius:5px;padding:18px;min-height:360px}
+  .ptitle{font-size:1.15rem;font-weight:700;color:#2b2f3a;margin:0 0 14px}
+
+  /* Inicio */
+  .home{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:330px;text-align:center;gap:10px}
+  .home h2{font-size:1.7rem;color:#34568b;margin:0}
+  .home p{font-size:1rem;color:#999;margin:0}
+  .home .quick{display:flex;gap:10px;margin-top:14px}
+
+  /* Form Nimbus */
+  .form{display:flex;flex-wrap:wrap;align-items:end;gap:14px;margin-bottom:14px}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:12.5px;color:#444;font-weight:600}
+  input{font-family:inherit;font-size:13px;padding:5px 8px;border:1px solid #97a0b0;border-radius:4px;background:#fff;color:#1d1d1d;min-width:150px}
+  input:focus{outline:none;border-color:#5b9bd5;box-shadow:0 0 0 2px rgba(91,155,213,.35)}
+  .acts{display:flex;gap:8px;margin-bottom:12px}
+  .acts .nbtn{font-size:12.5px;padding:5px 14px}
+
+  /* JTable Nimbus */
+  .jtable{border:1px solid #aab0bd;border-radius:3px;overflow:hidden;background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:linear-gradient(#f4f5f9,#dde1e9);border-right:1px solid #c9cdd7;border-bottom:1px solid #b9bdc8;
+    text-align:left;padding:6px 10px;font-weight:600;color:#333}
+  tbody td{padding:6px 10px;border-bottom:1px solid #eef0f4;color:#222}
+  tbody tr:nth-child(even){background:#eef2f8}
+  tbody tr.sel,tbody tr.sel td{background:#57a4da;color:#fff}
+  tbody tr{cursor:pointer}
+  tbody tr:hover:not(.sel){background:#dcebf9}
+  .scroll{max-height:220px;overflow:auto}
+  .empty{padding:14px;text-align:center;color:#999}
+  .hide{display:none}
+</style>
+</head>
+<body>
+  <div class="lead">
+    <h1>🗂️ Sistema de Inscripciones</h1>
+    <p>Demo web fiel al proyecto Java Swing (Look&Feel Nimbus · almacenamiento en archivos binarios) · <a href="https://portafolio-ten-olive-50.vercel.app/">← Volver al portafolio</a></p>
+  </div>
+
+  <div class="win">
+    <div class="titlebar"><span class="ico"></span> Sistema de Inscripciones
+      <span class="wb"><span>—</span><span>▢</span><span class="cls">✕</span></span>
+    </div>
+    <div class="nav">
+      <button class="nbtn active" data-v="inicio" onclick="nav('inicio')">Inicio</button>
+      <button class="nbtn" data-v="alu" onclick="nav('alu')">Alumno</button>
+      <button class="nbtn" data-v="mat" onclick="nav('mat')">Materia</button>
+      <button class="nbtn" data-v="ins" onclick="nav('ins')">Inscibir</button>
+      <button class="nbtn" onclick="reporte('general')">Generar Reporte</button>
+    </div>
+
+    <!-- Inicio -->
+    <div class="panel view" id="v-inicio">
+      <div class="home">
+        <h2>Bienvenido al Sistema De Inscripciones!</h2>
+        <p>¿Qué deseas hacer el día de hoy?</p>
+        <div class="quick">
+          <button class="nbtn" onclick="nav('alu')">Registro de Alumnos</button>
+          <button class="nbtn" onclick="nav('mat')">Registro de Materias</button>
+          <button class="nbtn" onclick="nav('ins')">Inscribir Alumnos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alumnos -->
+    <div class="panel view hide" id="v-alu">
+      <h3 class="ptitle">Registro de Alumnos</h3>
+      <div class="form">
+        <div class="fld"><label>No. Control:</label><input id="aCtrl" placeholder="20240005"></div>
+        <div class="fld"><label>Nombre:</label><input id="aNom" placeholder="Nombre del alumno"></div>
+        <div class="fld"><label>Sem:</label><input id="aSem" type="number" min="1" max="12" placeholder="1" style="min-width:70px"></div>
+      </div>
+      <div class="acts">
+        <button class="nbtn" onclick="agregarAlumno()">Agregar</button>
+        <button class="nbtn" onclick="buscar('alu')">Buscar</button>
+        <button class="nbtn" onclick="reporte('alu')">Crear Reporte</button>
+      </div>
+      <div class="jtable"><div class="scroll">
+        <table><thead><tr><th>No. Control</th><th>Nombre</th><th>Semestre</th></tr></thead><tbody id="tAlu"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- Materias -->
+    <div class="panel view hide" id="v-mat">
+      <h3 class="ptitle">Registro de Materias</h3>
+      <div class="form">
+        <div class="fld"><label>Clave:</label><input id="mCve" placeholder="ISC-110"></div>
+        <div class="fld"><label>Nombre:</label><input id="mNom" placeholder="Nombre de la materia"></div>
+        <div class="fld"><label>Cred:</label><input id="mCred" type="number" min="1" max="12" placeholder="5" style="min-width:70px"></div>
+      </div>
+      <div class="acts">
+        <button class="nbtn" onclick="agregarMateria()">Agregar</button>
+        <button class="nbtn" onclick="buscar('mat')">Buscar</button>
+        <button class="nbtn" onclick="reporte('mat')">Crear Reporte</button>
+      </div>
+      <div class="jtable"><div class="scroll">
+        <table><thead><tr><th>Clave</th><th>Nombre</th><th>Creditos</th></tr></thead><tbody id="tMat"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- Inscribir -->
+    <div class="panel view hide" id="v-ins">
+      <h3 class="ptitle">Inscribir Alumnos</h3>
+      <div class="form">
+        <div class="fld"><label>No. Control:</label><input id="iCtrl" placeholder="20240001"></div>
+        <div class="fld"><label>Clave de la Materia:</label><input id="iCve" placeholder="ISC-101"></div>
+      </div>
+      <div class="acts">
+        <button class="nbtn" onclick="inscribir()">Inscribir</button>
+        <button class="nbtn" onclick="reporte('ins')">Crear Reporte</button>
+      </div>
+      <div class="jtable"><div class="scroll">
+        <table><thead><tr><th>No. Control</th><th>Clave</th><th>Materia</th></tr></thead><tbody id="tIns"></tbody></table>
+      </div></div>
+    </div>
+  </div>
+
+<script>
+const alumnos=[
+  {ctrl:"20240001",nom:"Juan Pérez",sem:4},
+  {ctrl:"20240002",nom:"María López",sem:2},
+  {ctrl:"20240003",nom:"Carlos Ruiz",sem:6},
+  {ctrl:"20240004",nom:"Ana Torres",sem:4},
+];
+const materias=[
+  {cve:"ISC-101",nom:"Programación I",cred:5},
+  {cve:"MAT-202",nom:"Álgebra Lineal",cred:4},
+  {cve:"ISC-305",nom:"Estructuras de Datos",cred:5},
+  {cve:"FIS-110",nom:"Física General",cred:4},
+];
+const inscripciones=[
+  {ctrl:"20240001",cve:"ISC-101"},{ctrl:"20240001",cve:"MAT-202"},
+  {ctrl:"20240002",cve:"ISC-101"},{ctrl:"20240003",cve:"ISC-305"},
+];
+function nav(v){
+  document.querySelectorAll('.nbtn[data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(p=>p.classList.add('hide'));
+  document.getElementById('v-'+v).classList.remove('hide');
+}
+function renderAlu(){const tb=document.getElementById('tAlu');tb.innerHTML='';
+  if(!alumnos.length){tb.innerHTML='<tr><td colspan="3" class="empty">Sin alumnos</td></tr>';return;}
+  alumnos.forEach(a=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${a.ctrl}</td><td>${a.nom}</td><td>${a.sem}</td>`;
+    tr.onclick=()=>selRow(tr);tb.appendChild(tr);});}
+function renderMat(){const tb=document.getElementById('tMat');tb.innerHTML='';
+  if(!materias.length){tb.innerHTML='<tr><td colspan="3" class="empty">Sin materias</td></tr>';return;}
+  materias.forEach(m=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${m.cve}</td><td>${m.nom}</td><td>${m.cred}</td>`;
+    tr.onclick=()=>selRow(tr);tb.appendChild(tr);});}
+function renderIns(){const tb=document.getElementById('tIns');tb.innerHTML='';
+  if(!inscripciones.length){tb.innerHTML='<tr><td colspan="3" class="empty">Sin inscripciones</td></tr>';return;}
+  inscripciones.forEach(i=>{const m=materias.find(x=>x.cve===i.cve);const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i.ctrl}</td><td>${i.cve}</td><td>${m?m.nom:'—'}</td>`;
+    tr.onclick=()=>selRow(tr);tb.appendChild(tr);});}
+function selRow(tr){tr.parentNode.querySelectorAll('tr').forEach(r=>r.classList.remove('sel'));tr.classList.add('sel');}
+function v(id){return document.getElementById(id).value.trim();}
+function agregarAlumno(){const c=v('aCtrl'),n=v('aNom'),s=parseInt(v('aSem'),10);
+  if(!c||!n||!(s>0)){alert('Dato no válido: completa No. Control, Nombre y Semestre.');return;}
+  if(alumnos.some(a=>a.ctrl===c)){alert('Ya existe un alumno con ese No. de Control.');return;}
+  alumnos.push({ctrl:c,nom:n,sem:s});['aCtrl','aNom','aSem'].forEach(id=>document.getElementById(id).value='');renderAlu();}
+function agregarMateria(){const c=v('mCve'),n=v('mNom'),cr=parseInt(v('mCred'),10);
+  if(!c||!n||!(cr>0)){alert('Dato no válido: completa Clave, Nombre y Créditos.');return;}
+  if(materias.some(m=>m.cve===c)){alert('Ya existe una materia con esa clave.');return;}
+  materias.push({cve:c,nom:n,cred:cr});['mCve','mNom','mCred'].forEach(id=>document.getElementById(id).value='');renderMat();}
+function inscribir(){const c=v('iCtrl'),cv=v('iCve');
+  if(!c||!cv){alert('Dato no válido: ingresa No. de Control y Clave de la Materia.');return;}
+  if(!alumnos.some(a=>a.ctrl===c)){alert('No existe un alumno con ese No. de Control.');return;}
+  if(!materias.some(m=>m.cve===cv)){alert('No existe una materia con esa clave.');return;}
+  if(inscripciones.some(i=>i.ctrl===c&&i.cve===cv)){alert('El alumno ya está inscrito en esa materia.');return;}
+  inscripciones.push({ctrl:c,cve:cv});['iCtrl','iCve'].forEach(id=>document.getElementById(id).value='');renderIns();
+  alert('Inscripción registrada (demo).');}
+function buscar(t){
+  const q=prompt(t==='alu'?'Buscar alumno (No. Control o Nombre):':'Buscar materia (Clave o Nombre):');
+  if(q===null)return;const ql=q.toLowerCase();const tb=document.getElementById(t==='alu'?'tAlu':'tMat');
+  let hit=false;tb.querySelectorAll('tr').forEach(tr=>{const txt=tr.textContent.toLowerCase();
+    const m=ql&&txt.includes(ql);tr.classList.toggle('sel',m);if(m)hit=true;});
+  if(!hit)alert('No se encontraron coincidencias.');}
+function reporte(t){
+  const fecha=new Date().toLocaleDateString('es-MX');
+  if(t==='alu'||t==='general'&&false){}
+  let body='';
+  if(t==='alu'){body='REPORTE DE ALUMNOS ('+alumnos.length+')\n\n'+alumnos.map(a=>`${a.ctrl}  ${a.nom}  Sem ${a.sem}`).join('\n');}
+  else if(t==='mat'){body='REPORTE DE MATERIAS ('+materias.length+')\n\n'+materias.map(m=>`${m.cve}  ${m.nom}  ${m.cred} créditos`).join('\n');}
+  else if(t==='ins'){body='REPORTE DE INSCRIPCIONES ('+inscripciones.length+')\n\n'+inscripciones.map(i=>`${i.ctrl}  →  ${i.cve}`).join('\n');}
+  else{body=`SISTEMA DE INSCRIPCIONES — REPORTE GENERAL\n\nAlumnos: ${alumnos.length}\nMaterias: ${materias.length}\nInscripciones: ${inscripciones.length}`;}
+  alert('Reporte generado ('+fecha+'):\n\n'+body);}
+renderAlu();renderMat();renderIns();
+</script>
+</body>
+</html>
